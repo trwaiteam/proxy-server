@@ -17,11 +17,30 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+
+// Enhanced CORS configuration to allow all origins with preflight support
 app.use(cors({
-  origin: '*', // In production, you should specify allowed origins
-  methods: ['GET', 'POST', 'PUT'], // Added PUT for transcript requests
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',  // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Added OPTIONS for preflight
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,  // Support credentials
+  maxAge: 86400  // Cache preflight requests for 24 hours
 }));
+
+// Additional CORS middleware for handling any specific cases
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Serve static files from the dist directory with CORS headers
 app.use(express.static(path.join(__dirname, 'dist'), {
